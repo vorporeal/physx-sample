@@ -23,13 +23,20 @@ namespace PhysXTest
         #region Variables
 
         GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
 
         Core PhysXCore;
         Scene Scene;
         Camera _camera;
 
+        enum TEST_TYPE
+        {
+            BOX,
+            FLUBBER
+        };
+
         #endregion
+
+        const TEST_TYPE TEST = TEST_TYPE.FLUBBER;
 
         public PhysXTest()
         {
@@ -69,8 +76,7 @@ namespace PhysXTest
             SceneDescription sceneDesc = new SceneDescription()
             {
                 SimulationType = hworsw,
-                Gravity = new Vector3(0.0f, -9.81f, 0.0f),
-                GroundPlaneEnabled = true
+                Gravity = new Vector3(0.0f, -9.81f, 0.0f)
             };
 
             this.Scene = core.CreateScene(sceneDesc);
@@ -87,11 +93,37 @@ namespace PhysXTest
 
         private void InitializeObjects()
         {
+            switch(TEST)
+            {
+                // This test creates a box that falls from the sky and bounces on the ground plane.
+                // Nothing special.
+                case TEST_TYPE.BOX:
+                    SimpleBoxTest();
+                    break;
+
+                // This test creates a box as a container, and then creates a sphere in the box and
+                // plays around with doing stuff when collisions occur.
+                case TEST_TYPE.FLUBBER:
+                    FlubberTest();
+                    break;
+
+                // If none of the existing tests are chosen, create nothing.
+                default: ;
+            }
+        }
+
+        private void SimpleBoxTest()
+        {
             // Let's create a simple material.
             Material defaultMaterial = this.Scene.DefaultMaterial;
             defaultMaterial.StaticFriction = 0.5f;
             defaultMaterial.DynamicFriction = 0.5f;
-            defaultMaterial.Restitution = 0.4f;
+            defaultMaterial.Restitution = 0.5f;
+
+            // First, let's create a ground plane for the box to bounce on.
+            ActorDescription planeActor = new ActorDescription();
+            planeActor.Shapes.Add(new PlaneShapeDescription(Vector3.Up, 0.0f));
+            this.Scene.CreateActor(planeActor);
 
             // Let's create a box!
             // This describes the physics properties of the box.  We only need to make one
@@ -107,6 +139,70 @@ namespace PhysXTest
             boxActor.BodyDescription = boxDesc;
             // Let's add it to the scene!
             this.Scene.CreateActor(boxActor);
+        }
+
+        private void FlubberTest()
+        {
+            // Let's set the default material to make things BOUNCY.
+            Material defaultMaterial = this.Scene.DefaultMaterial;
+            defaultMaterial.StaticFriction = 0.5f;
+            defaultMaterial.DynamicFriction = 0.5f;
+            defaultMaterial.Restitution = 1.0f;
+            defaultMaterial.RestitutionCombineMode = CombineMode.Max;
+
+            // Here's another box.  This will be a container for the flubber to bounce around in.
+            ActorDescription boxActor = new ActorDescription();
+            // The back piece of the box.
+            boxActor.Shapes.Add(new BoxShapeDescription(new Vector3(40.0f, 40.0f, 2.0f))
+                {
+                    LocalPosition = new Vector3(0.0f, 0.0f, -19.0f)
+                });
+            // The front piece of the box.
+            boxActor.Shapes.Add(new BoxShapeDescription(new Vector3(40.0f, 40.0f, 2.0f))
+                {
+                    LocalPosition = new Vector3(0.0f, 0.0f, 19.0f)
+                });
+            // The left piece of the box.
+            boxActor.Shapes.Add(new BoxShapeDescription(new Vector3(2.0f, 40.0f, 40.0f))
+                {
+                    LocalPosition = new Vector3(-19.0f, 0.0f, 0.0f)
+                });
+            // The right piece of the box.
+            boxActor.Shapes.Add(new BoxShapeDescription(new Vector3(2.0f, 40.0f, 40.0f))
+                {
+                    LocalPosition = new Vector3(19.0f, 0.0f, 0.0f)
+                });
+            // The top piece of the box.
+            boxActor.Shapes.Add(new BoxShapeDescription(new Vector3(40.0f, 2.0f, 40.0f))
+                {
+                    LocalPosition = new Vector3(0.0f, 19.0f, 0.0f)
+                });
+            // The bottom piece of the box.
+            boxActor.Shapes.Add(new BoxShapeDescription(new Vector3(40.0f, 2.0f, 40.0f))
+                {
+                    LocalPosition = new Vector3(0.0f, -19.0f, 0.0f)
+                });
+            boxActor.GlobalPose *= Matrix.CreateTranslation(new Vector3(0.0f, 20.0f, 0.0f));
+            this.Scene.CreateActor(boxActor);
+
+            // Now we'll create a sphere inside the box.  It will start at the center of the box with
+            // a random initial velocity.
+            Random rand = new Random();
+            const double speed = 100.0f;
+            BodyDescription flubberDesc = new BodyDescription();
+            flubberDesc.LinearVelocity = new Vector3((float) (rand.NextDouble() * speed - speed / 2),
+                                                     (float) (rand.NextDouble() * speed - speed / 2),
+                                                     (float) (rand.NextDouble() * speed - speed / 2));
+            flubberDesc.LinearVelocity.Normalize();
+            flubberDesc.AngularDamping = 0.0f;
+            flubberDesc.LinearDamping = 0.0f;
+
+            ActorDescription flubberActor = new ActorDescription();
+            flubberActor.Shapes.Add(new SphereShapeDescription(2.0f));
+            flubberActor.GlobalPose *= Matrix.CreateTranslation(new Vector3(0.0f, 20.0f, 0.0f));
+            flubberActor.BodyDescription = flubberDesc;
+            flubberActor.Density = 10.0f;
+            this.Scene.CreateActor(flubberActor);
         }
 
         /// <summary>
