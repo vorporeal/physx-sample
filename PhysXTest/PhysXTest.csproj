@@ -69,7 +69,7 @@
     </Reference>
     <Reference Include="StillDesign.PhysX.Net, Version=0.12.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\PhysX.Net\PhysX.Net\bin\x86\Release XNA 3.1\StillDesign.PhysX.Net.dll</HintPath>
+      <HintPath>.\StillDesign.PhysX.Net.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <Private>False</Private>

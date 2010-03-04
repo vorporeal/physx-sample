@@ -145,8 +145,8 @@ namespace PhysXTest
         {
             // Let's set the default material to make things BOUNCY.
             Material defaultMaterial = this.Scene.DefaultMaterial;
-            defaultMaterial.StaticFriction = 0.5f;
-            defaultMaterial.DynamicFriction = 0.5f;
+            defaultMaterial.StaticFriction = 0.0f;
+            defaultMaterial.DynamicFriction = 0.01f;
             defaultMaterial.Restitution = 1.0f;
             defaultMaterial.RestitutionCombineMode = CombineMode.Max;
 
@@ -190,10 +190,12 @@ namespace PhysXTest
             Random rand = new Random();
             const double speed = 100.0f;
             BodyDescription flubberDesc = new BodyDescription();
-            flubberDesc.LinearVelocity = new Vector3((float) (rand.NextDouble() * speed - speed / 2),
-                                                     (float) (rand.NextDouble() * speed - speed / 2),
-                                                     (float) (rand.NextDouble() * speed - speed / 2));
+            flubberDesc.LinearVelocity = new Vector3((float) rand.NextDouble(),
+                                                     (float) rand.NextDouble(),
+                                                     (float) rand.NextDouble());
             flubberDesc.LinearVelocity.Normalize();
+            flubberDesc.LinearVelocity -= new Vector3(0.5f);
+            flubberDesc.LinearVelocity *= (float)(speed);
             flubberDesc.AngularDamping = 0.0f;
             flubberDesc.LinearDamping = 0.0f;
 
